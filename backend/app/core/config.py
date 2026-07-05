@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
 
     huggingface_token: str = ""
+    hf_stt_model: str = "openai/whisper-large-v3"
+    max_audio_size_mb: int = 10
+
     database_url: str = "postgresql+psycopg://vozfi:vozfi@postgres:5432/vozfi"
 
 
