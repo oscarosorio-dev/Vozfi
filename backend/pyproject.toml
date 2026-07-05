@@ -1,0 +1,14 @@
+[project]
+name = "backend-vozfi"
+version = "0.1.0"
+description = "Es el backend de vozfi donde esta toda la integración de AI y servicios externos"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.139.0",
+]
+
+[dependency-groups]
+dev = [
+    "uvicorn>=0.50.0",
+]
