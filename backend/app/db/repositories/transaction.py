@@ -1,9 +1,12 @@
-import uuid
+from __future__ import annotations
 
-from sqlalchemy import select
+import uuid
+from datetime import datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.transaction import Transaction
+from app.models.transaction import Transaction, TransactionType
 from app.schemas.transaction import TransactionCreate
 
 
@@ -32,3 +35,38 @@ class TransactionRepository:
         self.db.delete(transaction)
         self.db.commit()
         return True
+
+    def get_balance(self, start: datetime | None = None, end: datetime | None = None) -> dict[str, float]:
+        stmt = select(Transaction.type, func.coalesce(func.sum(Transaction.amount), 0))
+        stmt = self._apply_date_filter(stmt, start, end)
+        stmt = stmt.group_by(Transaction.type)
+
+        totals = {t: 0.0 for t in TransactionType}
+        for tx_type, total in self.db.execute(stmt):
+            totals[tx_type] = float(total)
+
+        income = totals[TransactionType.INCOME]
+        expense = totals[TransactionType.EXPENSE]
+        return {"income": income, "expense": expense, "balance": income - expense}
+
+    def get_summary_by_category(self, start: datetime | None = None, end: datetime | None = None) -> list[dict]:
+        stmt = select(
+            Transaction.category,
+            Transaction.type,
+            func.coalesce(func.sum(Transaction.amount), 0),
+        )
+        stmt = self._apply_date_filter(stmt, start, end)
+        stmt = stmt.group_by(Transaction.category, Transaction.type).order_by(func.sum(Transaction.amount).desc())
+
+        return [
+            {"category": category, "type": tx_type, "total": float(total)}
+            for category, tx_type, total in self.db.execute(stmt)
+        ]
+
+    @staticmethod
+    def _apply_date_filter(stmt, start: datetime | None, end: datetime | None):
+        if start is not None:
+            stmt = stmt.where(Transaction.occurred_at >= start)
+        if end is not None:
+            stmt = stmt.where(Transaction.occurred_at <= end)
+        return stmt
