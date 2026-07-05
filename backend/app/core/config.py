@@ -13,7 +13,9 @@ class Settings(BaseSettings):
 
     huggingface_token: str = ""
     hf_stt_model: str = "openai/whisper-large-v3"
+    hf_tts_model: str = "facebook/mms-tts-spa"
     max_audio_size_mb: int = 10
+    max_tts_text_length: int = 500
 
     database_url: str = "postgresql+psycopg://vozfi:vozfi@postgres:5432/vozfi"
 

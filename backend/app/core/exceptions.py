@@ -4,3 +4,7 @@ class VozfiError(Exception):
 
 class TranscriptionError(VozfiError):
     """Se produce cuando el servicio de transcripción (STT) falla."""
+
+
+class SynthesisError(VozfiError):
+    """Se produce cuando el servicio de síntesis de voz (TTS) falla."""
