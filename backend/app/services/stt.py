@@ -1,34 +1,45 @@
-from functools import lru_cache
-
-from huggingface_hub import InferenceClient
-from huggingface_hub.errors import HfHubHTTPError, InferenceTimeoutError
+import httpx
 
 from app.core.config import get_settings
 from app.core.exceptions import TranscriptionError
 
+_GROQ_TRANSCRIPTIONS_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+
 
 class SttService:
-    """Transcribe audio a texto usando un modelo ASR vía Hugging Face Inference."""
+    """Transcribe audio a texto usando la API de Groq (Whisper)."""
 
-    def __init__(self, client: InferenceClient) -> None:
-        self._client = client
+    def __init__(self, api_key: str, model: str) -> None:
+        self._api_key = api_key
+        self._model = model
 
-    def transcribe(self, audio: bytes) -> str:
+    def transcribe(self, audio: bytes, content_type: str) -> str:
+        """Transcribe audio a texto. `content_type` se usa para nombrar el archivo enviado."""
+        extension = content_type.split("/")[-1].split(";")[0] or "wav"
+        files = {"file": (f"audio.{extension}", audio, content_type)}
+        data = {"model": self._model}
+        headers = {"Authorization": f"Bearer {self._api_key}"}
+
         try:
-            output = self._client.automatic_speech_recognition(audio)
-        except InferenceTimeoutError as exc:
+            response = httpx.post(
+                _GROQ_TRANSCRIPTIONS_URL,
+                headers=headers,
+                data=data,
+                files=files,
+                timeout=30.0,
+            )
+            response.raise_for_status()
+        except httpx.TimeoutException as exc:
             raise TranscriptionError("El servicio de transcripción no respondió a tiempo") from exc
-        except HfHubHTTPError as exc:
-            raise TranscriptionError("No se pudo procesar el audio con el servicio de transcripción") from exc
+        except httpx.HTTPStatusError as exc:
+            raise TranscriptionError(f"No se pudo procesar el audio: {exc.response.text}") from exc
 
-        text = output.text.strip()
+        text = response.json().get("text", "").strip()
         if not text:
             raise TranscriptionError("No se detectó voz en el audio")
         return text
 
 
-@lru_cache
 def get_stt_service() -> SttService:
     settings = get_settings()
-    client = InferenceClient(model=settings.hf_stt_model, token=settings.huggingface_token or None)
-    return SttService(client)
+    return SttService(api_key=settings.groq_api_key, model=settings.groq_stt_model)
