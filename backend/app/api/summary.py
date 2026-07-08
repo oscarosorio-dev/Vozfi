@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.repositories.transaction import TransactionRepository
 from app.db.session import get_db
-from app.schemas.summary import BalanceRead, CategorySummaryItem
+from app.schemas.summary import BalanceRead, CategorySummaryItem, MonthlySummaryItem
 
 router = APIRouter(prefix="/summary", tags=["summary"])
 
@@ -26,3 +26,12 @@ def get_summary_by_category(
     db: Session = Depends(get_db),
 ) -> list[CategorySummaryItem]:
     return TransactionRepository(db).get_summary_by_category(start=start, end=end)
+
+
+@router.get("/by-month", response_model=list[MonthlySummaryItem])
+def get_summary_by_month(
+    start: datetime | None = None,
+    end: datetime | None = None,
+    db: Session = Depends(get_db),
+) -> list[MonthlySummaryItem]:
+    return TransactionRepository(db).get_summary_by_month(start=start, end=end)
