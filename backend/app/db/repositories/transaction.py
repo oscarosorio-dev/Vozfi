@@ -63,6 +63,28 @@ class TransactionRepository:
             for category, tx_type, total in self.db.execute(stmt)
         ]
 
+    def get_summary_by_month(self, start: datetime | None = None, end: datetime | None = None) -> list[dict]:
+        month_expr = func.date_trunc("month", Transaction.occurred_at)
+        stmt = select(month_expr, Transaction.type, func.coalesce(func.sum(Transaction.amount), 0))
+        stmt = self._apply_date_filter(stmt, start, end)
+        stmt = stmt.group_by(month_expr, Transaction.type).order_by(month_expr)
+
+        months: dict[str, dict[str, float]] = {}
+        for month_dt, tx_type, total in self.db.execute(stmt):
+            key = month_dt.strftime("%Y-%m")
+            months.setdefault(key, {"income": 0.0, "expense": 0.0})
+            months[key][tx_type.value] = float(total)
+
+        return [
+            {
+                "month": key,
+                "income": totals["income"],
+                "expense": totals["expense"],
+                "balance": totals["income"] - totals["expense"],
+            }
+            for key, totals in sorted(months.items())
+        ]
+
     @staticmethod
     def _apply_date_filter(stmt, start: datetime | None, end: datetime | None):
         if start is not None:
