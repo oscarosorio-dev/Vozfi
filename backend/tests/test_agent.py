@@ -17,6 +17,7 @@ def test_agent_chat_timeout(client: TestClient) -> None:
         response = client.post("/agent/chat", json={"message": "hola"})
 
     assert response.status_code == 504
+    assert response.json()["detail"] == "Estoy tardando más de lo normal, intenta de nuevo en un momento."
 
 
 def test_agent_chat_rate_limit(client: TestClient) -> None:

@@ -66,3 +66,29 @@ def test_create_transaction_invalid_amount(client: TestClient) -> None:
         },
     )
     assert response.status_code == 422
+
+
+def test_update_transaction_partial(client: TestClient) -> None:
+    created = _create_transaction(client)
+
+    response = client.patch(f"/transactions/{created['id']}", json={"amount": 30000, "description": "corregido"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["amount"] == 30000
+    assert data["description"] == "corregido"
+    assert data["category"] == "comida"
+
+
+def test_update_transaction_not_found(client: TestClient) -> None:
+    response = client.patch(
+        "/transactions/00000000-0000-0000-0000-000000000000",
+        json={"amount": 100},
+    )
+    assert response.status_code == 404
+
+
+def test_update_transaction_invalid_amount(client: TestClient) -> None:
+    created = _create_transaction(client)
+
+    response = client.patch(f"/transactions/{created['id']}", json={"amount": -5})
+    assert response.status_code == 422

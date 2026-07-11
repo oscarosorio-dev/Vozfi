@@ -60,6 +60,7 @@ def test_voice_input_stt_falla(client: TestClient) -> None:
 
     response = client.post("/voice/voice-input", files={"file": ("a.wav", b"RIFFxxxx", "audio/wav")})
     assert response.status_code == 502
+    assert response.json()["detail"] == "No entendí lo que dijiste, ¿puedes repetirlo?"
 
 
 def test_voice_input_content_type_no_soportado(client: TestClient) -> None:
