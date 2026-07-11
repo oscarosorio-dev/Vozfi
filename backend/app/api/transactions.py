@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.repositories.transaction import TransactionRepository
 from app.db.session import get_db
-from app.schemas.transaction import TransactionCreate, TransactionRead
+from app.schemas.transaction import TransactionCreate, TransactionRead, TransactionUpdate
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -23,6 +23,16 @@ def list_transactions(limit: int = 50, offset: int = 0, db: Session = Depends(ge
 @router.get("/{transaction_id}", response_model=TransactionRead)
 def get_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)) -> TransactionRead:
     transaction = TransactionRepository(db).get(transaction_id)
+    if transaction is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+    return transaction
+
+
+@router.patch("/{transaction_id}", response_model=TransactionRead)
+def update_transaction(
+    transaction_id: uuid.UUID, data: TransactionUpdate, db: Session = Depends(get_db)
+) -> TransactionRead:
+    transaction = TransactionRepository(db).update(transaction_id, data)
     if transaction is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return transaction

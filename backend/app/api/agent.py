@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
-from groq import RateLimitError
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.agent.service import run_agent
+from app.core.http_errors import raise_friendly_http_error
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -20,20 +20,7 @@ async def chat_with_agent(payload: AgentChatRequest) -> AgentChatResponse:
     """Envía un mensaje de texto al agente financiero (canal texto)."""
     try:
         reply = await run_agent(payload.message)
-    except TimeoutError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="El agente no respondió a tiempo",
-        ) from exc
-    except RateLimitError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Límite de peticiones de Groq alcanzado, intenta en unos segundos",
-        ) from exc
     except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"El agente no pudo procesar el mensaje: {exc}",
-        ) from exc
+        raise_friendly_http_error(exc, context="agent/chat")
 
     return AgentChatResponse(reply=reply)

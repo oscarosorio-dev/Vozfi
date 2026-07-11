@@ -2,12 +2,12 @@ import base64
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
-from groq import RateLimitError
 from pydantic import BaseModel, Field
 
 from app.agent.service import run_agent
 from app.core.config import Settings, get_settings
 from app.core.exceptions import SynthesisError, TranscriptionError
+from app.core.http_errors import raise_friendly_http_error
 from app.services.stt import SttService, get_stt_service
 from app.services.tts import TtsService, get_tts_service
 
@@ -127,25 +127,12 @@ async def voice_input(
     try:
         transcript = stt_service.transcribe(audio_bytes, file.content_type)
     except TranscriptionError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        raise_friendly_http_error(exc, context="voice-input/stt")
 
     try:
         reply = await run_agent(transcript)
-    except TimeoutError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="El agente no respondió a tiempo",
-        ) from exc
-    except RateLimitError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Límite de peticiones de Groq alcanzado, intenta en unos segundos",
-        ) from exc
     except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"El agente no pudo procesar el mensaje: {exc}",
-        ) from exc
+        raise_friendly_http_error(exc, context="voice-input/agent")
 
     audio_base64: str | None = None
     audio_content_type: str | None = None
