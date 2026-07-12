@@ -68,7 +68,11 @@ export default function HomeScreen() {
 
         {/* Sección Central: Micrófono, Estados y Feedback de conversación */}
         <View style={styles.micSection}>
-          <MicButton status={status} onPress={handleMicPress} />
+          <MicButton 
+            status={status} 
+            onPressIn={start} 
+            onPressOut={stop} 
+          />
           <VoiceStatusIndicator status={status} errorMessage={error} />
           <ConversationFeedback result={result} />
         </View>
