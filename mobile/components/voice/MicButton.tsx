@@ -15,12 +15,13 @@ import type { VoicePipelineStatus } from '@/hooks/useVoicePipeline';
 
 type Props = {
   status: VoicePipelineStatus;
-  onPress: () => void;
+  onPressIn: () => void;
+  onPressOut: () => void;
 };
 
 const SIZE = 96;
 
-export function MicButton({ status, onPress }: Props) {
+export function MicButton({ status, onPressIn, onPressOut }: Props) {
   const pulse = useSharedValue(1);
   const tint = useThemeColor({}, 'tint');
   const expenseColor = useThemeColor({}, 'expense');
@@ -39,23 +40,31 @@ export function MicButton({ status, onPress }: Props) {
     transform: [{ scale: pulse.value }],
   }));
 
-  function handlePress() {
+  function handlePressIn() {
+    if (disabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onPress();
+    onPressIn();
+  }
+
+  function handlePressOut() {
+    if (disabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPressOut();
   }
 
   const backgroundColor = status === 'recording' ? expenseColor : tint;
-  const iconName = status === 'recording' ? 'mic.fill' : 'mic.fill';
+  const iconName = 'mic.fill';
 
   return (
     <Animated.View style={animatedStyle}>
       <Pressable
-        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={disabled}
         style={[styles.button, { backgroundColor, opacity: disabled ? 0.6 : 1 }]}
         accessibilityRole="button"
-        accessibilityLabel={status === 'recording' ? 'Detener grabación' : 'Iniciar grabación'}>
-        <IconSymbol name={iconName} size={40} color="#fff" />
+        accessibilityLabel={status === 'recording' ? 'Soltar para enviar' : 'Mantener presionado para grabar'}>
+        <IconSymbol name={iconName} size={40} color="" />
       </Pressable>
     </Animated.View>
   );
