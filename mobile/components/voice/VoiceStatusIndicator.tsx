@@ -3,8 +3,8 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import type { VoicePipelineStatus } from '@/hooks/useVoicePipeline';
 
 const LABELS: Record<VoicePipelineStatus, string> = {
-  idle: 'Toca para hablar',
-  recording: 'Escuchando... toca para detener',
+  idle: 'Mantén presionado para hablar',
+  recording: 'Escuchando... suelta para enviar',
   processing: 'Procesando...',
   speaking: 'Respondiendo...',
   error: 'Ocurrió un error',
