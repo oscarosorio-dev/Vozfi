@@ -53,7 +53,17 @@ export function useVoicePipeline() {
     }
   }, [startRecording]);
 
-  const stop = useCallback(async () => {
+const stop = useCallback(async () => {
+    // Si el grabador no está activo (ej. toque ultra rápido o error al iniciar),
+    // cancelamos de forma segura sin intentar subir un audio inexistente.
+    if (!isRecording) {
+      try {
+        await stopRecording();
+      } catch {}
+      setStatus('idle');
+      return;
+    }
+
     setStatus('processing');
     try {
       const recording = await stopRecording();
@@ -79,7 +89,7 @@ export function useVoicePipeline() {
       setError(err instanceof Error ? err.message : 'No se pudo procesar el audio');
       setStatus('error');
     }
-  }, [stopRecording, queryClient]);
+  }, [stopRecording, queryClient, isRecording]); // Agregamos isRecording como dependencia
 
   return { status, isRecording, result, error, start, stop };
 }
