@@ -1,11 +1,12 @@
 # Vozfi
 
-![React](https://img.shields.io/badge/Expo-313131?style=flat&logo=expo)
-![Vite](https://img.shields.io/badge/Yarn-313131?style=flat&logo=yarn)
+![React-Native](https://img.shields.io/badge/Expo-313131?style=flat&logo=expo)
+![Yarn](https://img.shields.io/badge/Yarn-313131?style=flat&logo=yarn)
 ![FastAPI](https://img.shields.io/badge/FastAPI-313131?style=flat&logo=fastapi)
 ![LangChain](https://img.shields.io/badge/LangGraph-313131?style=flat&logo=langgraph)
 ![Postgres](https://img.shields.io/badge/Postgres-313131?style=flat&logo=postgresql)
 ![Docker](https://img.shields.io/badge/Docker-313131?style=flat&logo=docker)
+![Actions](https://img.shields.io/badge/Actions-313131?style=flat&logo=github)
 ![Status](https://img.shields.io/badge/Status-development-success)
 
 Fintech personal con voz como interfaz principal. Hablas, y un agente de IA registra tus ingresos/gastos o responde consultas sobre tu balance sin tocar un formulario.
