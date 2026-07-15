@@ -122,7 +122,7 @@ def test_actualizar_transaccion_id_invalido_o_inexistente() -> None:
     # ID inexistente pero con formato UUID válido
     id_falso = str(uuid.uuid4())
     resultado_inex = actualizar_transaccion(id_falso, monto=100.0)
-    assert "No se encontró ninguna transacción" in resultado_inex
+    assert "No se encontró la transacción solicitada" in resultado_inex
 
 
 def test_eliminar_transaccion_exito() -> None:
@@ -133,7 +133,7 @@ def test_eliminar_transaccion_exito() -> None:
 
     resultado = obtener_balance() # Cargar el balance antes para asegurar consistencia
     resultado_del = eliminar_transaccion(tx_id)
-    assert "eliminada correctamente" in resultado_del
+    assert "eliminó correctamente" in resultado_del
 
     # Confirmar que ya no está en la base de datos
     lista_despues = listar_transacciones()
@@ -143,7 +143,7 @@ def test_eliminar_transaccion_exito() -> None:
 def test_eliminar_transaccion_no_encontrada() -> None:
     id_falso = str(uuid.uuid4())
     resultado = eliminar_transaccion(id_falso)
-    assert "No se encontró ninguna transacción" in resultado
+    assert "No se encontró la transacción especificada" in resultado
 
 def test_vaciar_transacciones_sin_confirmacion() -> None:
     # Registrar un dato para asegurarnos de que no se borre
@@ -152,7 +152,7 @@ def test_vaciar_transacciones_sin_confirmacion() -> None:
     # Intentar vaciar sin confirmación (por defecto es False)
     resultado = vaciar_transacciones(confirmar=False)
     assert "ADVERTENCIA" in resultado
-    assert "esta acción es destructiva" in resultado
+    assert "Esta acción es destructiva e irreversible" in resultado
     
     # Verificar que el registro aún existe
     balance_resultado = obtener_balance()
