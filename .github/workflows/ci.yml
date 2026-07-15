@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vozfi
+          POSTGRES_PASSWORD: vozfi
+          POSTGRES_DB: vozfi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://vozfi:vozfi@localhost:5432/vozfi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        working-directory: backend
+        run: uv sync --all-groups
+
+      - name: Aplicar migraciones
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Correr tests
+        working-directory: backend
+        run: uv run pytest tests/ -v
+
+  mcp-server-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vozfi
+          POSTGRES_PASSWORD: vozfi
+          POSTGRES_DB: vozfi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://vozfi:vozfi@localhost:5432/vozfi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Aplicar migraciones (esquema compartido)
+        working-directory: backend
+        run: |
+          uv sync --all-groups
+          uv run alembic upgrade head
+
+      - name: Instalar dependencias del mcp-server
+        working-directory: mcp-server
+        run: uv sync --all-groups
+
+      - name: Correr tests
+        working-directory: mcp-server
+        run: uv run pytest tests/ -v
+
+  mobile-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+          cache-dependency-path: mobile/yarn.lock
+
+      - name: Instalar dependencias
+        working-directory: mobile
+        run: yarn install --frozen-lockfile
+
+      - name: Type-check
+        working-directory: mobile
+        run: yarn tsc --noEmit
+
+      - name: Lint
+        working-directory: mobile
+        run: yarn lint

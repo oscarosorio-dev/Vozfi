@@ -1,0 +1,17 @@
+[project]
+name = "mcp-server"
+version = "0.1.0"
+description = "Servidor MCP de Vozfi: expone herramientas de finanzas personales sobre Postgres"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mcp[cli]>=1.28.1",
+    "pydantic>=2.13.4",
+    "sqlalchemy>=2.0.51",
+    "psycopg[binary]>=3.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+]

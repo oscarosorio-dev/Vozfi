@@ -1,0 +1,54 @@
+services:
+
+  migrate:
+    build: ./backend
+    env_file:
+      - .env
+    entrypoint: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mcp-server:
+        condition: service_started
+
+  mcp-server:
+    build: ./mcp-server
+    env_file:
+      - .env
+    volumes:
+      - ./mcp-server/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-vozfi}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-vozfi}
+      - POSTGRES_DB=${POSTGRES_DB:-vozfi}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vozfi}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
