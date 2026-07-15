@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from app.models.enums import TransactionType
 
@@ -8,6 +8,10 @@ class TransactionBase(BaseModel):
     amount: float = Field(..., description="Monto de la transacción, debe ser estrictamente positivo")
     category: str = Field(..., max_length=50, description="Categoría del movimiento")
     description: str | None = Field(None, max_length=255, description="Detalle opcional de la transacción")
+    occurred_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Fecha/hora en que ocurrió la transacción (default: ahora, si no se especifica)",
+    )
 
     @field_validator("amount")
     @classmethod
